@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Backend Connection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        h1 {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Backend Connection Test</h1>
+        <p><strong>Backend URL:</strong> https://vishnulogisticsbackend.onrender.com</p>
+        
+        <button onclick="testHealth()">Test 1: Health Check</button>
+        <button onclick="testRegister()">Test 2: Register API</button>
+        <button onclick="testLogin()">Test 3: Login API</button>
+        <button onclick="clearResults()">Clear Results</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const API_URL = 'https://vishnulogisticsbackend.onrender.com';
+        const resultsDiv = document.getElementById('results');
+
+        function addResult(title, data, isError = false) {
+            const div = document.createElement('div');
+            div.className = 'result ' + (isError ? 'error' : 'success');
+            div.innerHTML = `<strong>${title}</strong>\n${JSON.stringify(data, null, 2)}`;
+            resultsDiv.appendChild(div);
+        }
+
+        function clearResults() {
+            resultsDiv.innerHTML = '';
+        }
+
+        async function testHealth() {
+            try {
+                addResult('⏳ Testing Health Endpoint...', { status: 'Loading...' });
+                
+                const response = await fetch(`${API_URL}/api/health`);
+                const data = await response.json();
+                
+                clearResults();
+                addResult('✅ Health Check Success', {
+                    status: response.status,
+                    data: data
+                });
+            } catch (error) {
+                clearResults();
+                addResult('❌ Health Check Failed', {
+                    error: error.message,
+                    details: 'Backend might be down or CORS not configured'
+                }, true);
+            }
+        }
+
+        async function testRegister() {
+            try {
+                addResult('⏳ Testing Register Endpoint...', { status: 'Loading...' });
+                
+                const testUser = {
+                    email: `test${Date.now()}@test.com`,
+                    password: 'test123456',
+                    full_name: 'Test User',
+                    role: 'customer'
+                };
+
+                const response = await fetch(`${API_URL}/api/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(testUser)
+                });
+                
+                const data = await response.json();
+                
+                clearResults();
+                if (response.ok) {
+                    addResult('✅ Register Success', {
+                        status: response.status,
+                        message: 'User created successfully',
+                        user: data.data?.user?.email || 'Created'
+                    });
+                } else {
+                    addResult('⚠️ Register Response', {
+                        status: response.status,
+                        data: data
+                    }, true);
+                }
+            } catch (error) {
+                clearResults();
+                addResult('❌ Register Failed', {
+                    error: error.message,
+                    details: 'Check CORS configuration or network'
+                }, true);
+            }
+        }
+
+        async function testLogin() {
+            try {
+                addResult('⏳ Testing Login Endpoint...', { status: 'Loading...' });
+                
+                const credentials = {
+                    email: 'test@test.com',
+                    password: 'test123456'
+                };
+
+                const response = await fetch(`${API_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(credentials)
+                });
+                
+                const data = await response.json();
+                
+                clearResults();
+                if (response.ok) {
+                    addResult('✅ Login Success', {
+                        status: response.status,
+                        message: 'Login successful',
+                        hasToken: !!data.data?.token
+                    });
+                } else {
+                    addResult('⚠️ Login Response', {
+                        status: response.status,
+                        message: data.message || 'Invalid credentials (expected)'
+                    });
+                }
+            } catch (error) {
+                clearResults();
+                addResult('❌ Login Failed', {
+                    error: error.message,
+                    details: 'Check CORS configuration or network'
+                }, true);
+            }
+        }
+
+        // Auto-test on load
+        window.onload = () => {
+            testHealth();
+        };
+    </script>
+</body>
+</html>

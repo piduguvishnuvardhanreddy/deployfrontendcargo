@@ -1,5 +1,10 @@
 // API Client for MongoDB Backend
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+// HARDCODED for production - change this if needed
+const API_URL = 'https://vishnulogisticsbackend.onrender.com';
+
+// Debug: Log the API URL
+console.log('🔗 API URL configured:', API_URL);
+console.log('🔗 Environment variable:', import.meta.env.VITE_API_URL);
 
 // Token management
 export const getToken = (): string | null => localStorage.getItem('token');
